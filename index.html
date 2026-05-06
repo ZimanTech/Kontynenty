@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Odkrywca Kontynentów 🌍</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --surface2: #f0ede6;
+    --border: rgba(0,0,0,0.12);
+    --border2: rgba(0,0,0,0.22);
+    --text: #1a1a1a;
+    --text2: #555;
+    --text3: #888;
+    --green: #1D9E75;
+    --green-light: #EAF3DE;
+    --green-dark: #27500A;
+    --red-light: #FCEBEB;
+    --red-dark: #501313;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a1a;
+      --surface: #242424;
+      --surface2: #2e2e2e;
+      --border: rgba(255,255,255,0.10);
+      --border2: rgba(255,255,255,0.22);
+      --text: #f0ede6;
+      --text2: #b0a898;
+      --text3: #777;
+      --green-light: #1a3020;
+      --green-dark: #a3e6b8;
+      --red-light: #2a1515;
+      --red-dark: #f09595;
+    }
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    font-family: 'Nunito', sans-serif;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  #app {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 3rem;
+    min-height: 100%;
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* LOGO */
+  h1.logo {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2.2rem;
+    color: var(--text);
+    text-align: center;
+    margin-bottom: 0.2rem;
+    letter-spacing: 0.5px;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 0.95rem;
+    color: var(--text2);
+    margin-bottom: 1.75rem;
+  }
+
+  /* HOME — mode cards */
+  .mode-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 1.5rem;
+  }
+  .mode-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem 1rem;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.15s, background 0.15s, transform 0.1s;
+    user-select: none;
+  }
+  .mode-card:hover {
+    border-color: var(--border2);
+    background: var(--surface2);
+    transform: translateY(-2px);
+  }
+  .mode-card:active { transform: translateY(0); }
+  .mode-icon { font-size: 2.25rem; margin-bottom: 0.5rem; }
+  .mode-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.05rem;
+    color: var(--text);
+    margin-bottom: 0.2rem;
+  }
+  .mode-desc { font-size: 0.8rem; color: var(--text3); }
+
+  /* QUIZ HEADER */
+  .quiz-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+  .progress-bar-wrap {
+    flex: 1;
+    height: 8px;
+    background: var(--surface2);
+    border-radius: 4px;
+    margin: 0 12px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--green);
+    border-radius: 4px;
+    transition: width 0.35s ease;
+  }
+  .score-badge, .q-num {
+    font-size: 0.88rem;
+    color: var(--text2);
+    white-space: nowrap;
+    font-weight: 600;
+  }
+
+  /* QUESTION CARD */
+  .question-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.75rem 1.5rem;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  .question-emoji { font-size: 3.5rem; margin-bottom: 0.75rem; }
+  .question-text {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.3rem;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .hint-text {
+    font-size: 0.85rem;
+    color: var(--text3);
+    margin-top: 0.5rem;
+    min-height: 1.2em;
+    font-style: italic;
+  }
+
+  /* ANSWERS */
+  .answers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
+  .answer-btn {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 0.85rem 1rem;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.12s, background 0.12s, transform 0.1s;
+    line-height: 1.3;
+  }
+  .answer-btn:hover:not(:disabled) {
+    border-color: var(--green);
+    background: var(--surface2);
+    transform: translateY(-1px);
+  }
+  .answer-btn.correct {
+    background: var(--green-light);
+    border-color: #639922;
+    color: var(--green-dark);
+  }
+  .answer-btn.wrong {
+    background: var(--red-light);
+    border-color: #A32D2D;
+    color: var(--red-dark);
+  }
+  .answer-btn:disabled { cursor: default; transform: none; }
+
+  /* FEEDBACK */
+  .feedback-box {
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    color: var(--text2);
+    text-align: center;
+    margin-bottom: 1rem;
+    min-height: 2.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+  }
+
+  /* MAP */
+  #map-svg-wrap {
+    background: var(--surface2);
+    border-radius: var(--radius);
+    padding: 0.6rem;
+    margin-bottom: 1rem;
+    overflow: hidden;
+  }
+  #map-svg-wrap svg { display: block; width: 100%; }
+  .continent-path {
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .continent-path:hover { opacity: 0.72; }
+  .map-question {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.2rem;
+    text-align: center;
+    color: var(--text);
+    margin-bottom: 0.75rem;
+  }
+
+  /* RESULT */
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2.25rem 1.5rem;
+    text-align: center;
+    max-width: 420px;
+    margin: 0 auto 1.5rem;
+  }
+  .result-emoji { font-size: 4.5rem; margin-bottom: 0.75rem; }
+  .result-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2rem;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+  .stars { font-size: 2.2rem; margin-bottom: 0.75rem; letter-spacing: 4px; }
+  .result-score { font-size: 1rem; color: var(--text2); margin-bottom: 1.75rem; }
+
+  .btn-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 0.65rem 1.5rem;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+  .btn-secondary {
+    background: transparent;
+    color: var(--text2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 0.65rem 1.5rem;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-secondary:hover { background: var(--surface2); }
+
+  /* FACTS */
+  .facts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+    margin-bottom: 1.25rem;
+  }
+  .fact-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 0.75rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.1s;
+    user-select: none;
+  }
+  .fact-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+  .fact-flag { font-size: 1.9rem; margin-bottom: 0.4rem; }
+  .fact-name {
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.92rem;
+    color: var(--text);
+    margin-bottom: 0.2rem;
+  }
+  .fact-detail { font-size: 0.75rem; color: var(--text3); }
+
+  .fact-expanded {
+    background: var(--surface2);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+    display: none;
+    animation: slideDown 0.2s ease;
+  }
+  .fact-expanded.open { display: block; }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .fact-expanded h3 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.15rem;
+    color: var(--text);
+    margin-bottom: 0.6rem;
+  }
+  .fact-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 0.4rem; }
+  .fact-pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 0.78rem;
+    color: var(--text2);
+  }
+  .fact-section-label {
+    font-size: 0.82rem;
+    color: var(--text2);
+    font-weight: 700;
+    margin: 0.6rem 0 0.3rem;
+  }
+  .fact-item {
+    font-size: 0.82rem;
+    color: var(--text2);
+    margin-bottom: 3px;
+  }
+
+  @media (max-width: 400px) {
+    h1.logo { font-size: 1.75rem; }
+    .mode-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .answers-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .question-text { font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HOME -->
+  <div id="screen-home" class="screen active">
+    <h1 class="logo">🌍 Odkrywca Kontynentów</h1>
+    <p class="subtitle">Wybierz tryb i sprawdź swoją wiedzę o świecie!</p>
+    <div class="mode-grid">
+      <div class="mode-card" onclick="startQuiz('names')">
+        <div class="mode-icon">🧠</div>
+        <div class="mode-title">Nazwy</div>
+        <div class="mode-desc">Dopasuj fakty do kontynentu</div>
+      </div>
+      <div class="mode-card" onclick="startQuiz('map')">
+        <div class="mode-icon">🗺️</div>
+        <div class="mode-title">Mapa</div>
+        <div class="mode-desc">Wskaż kontynent na mapie</div>
+      </div>
+      <div class="mode-card" onclick="showFacts()">
+        <div class="mode-icon">📚</div>
+        <div class="mode-title">Ciekawostki</div>
+        <div class="mode-desc">Poznaj każdy kontynent</div>
+      </div>
+      <div class="mode-card" onclick="startQuiz('flags')">
+        <div class="mode-icon">🚩</div>
+        <div class="mode-title">Flagi</div>
+        <div class="mode-desc">Z jakiego kontynentu?</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="screen-quiz" class="screen">
+    <div class="quiz-header">
+      <span class="q-num" id="q-num">1/10</span>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+      <span class="score-badge">⭐ <span id="score-display">0</span></span>
+    </div>
+    <div class="question-card">
+      <div class="question-emoji" id="q-emoji">🌍</div>
+      <div class="question-text" id="q-text">Pytanie...</div>
+      <div class="hint-text" id="q-hint"></div>
+    </div>
+    <div class="answers-grid" id="answers-grid"></div>
+    <div class="feedback-box" id="feedback-box"></div>
+  </div>
+
+  <!-- MAP -->
+  <div id="screen-map" class="screen">
+    <div class="quiz-header">
+      <span class="q-num" id="map-q-num">1/7</span>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="map-progress-fill" style="width:0%"></div>
+      </div>
+      <span class="score-badge">⭐ <span id="map-score-display">0</span></span>
+    </div>
+    <div class="map-question" id="map-question-text">Znajdź kontynent na mapie!</div>
+    <div id="map-svg-wrap"></div>
+    <div class="feedback-box" id="map-feedback-box"></div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="screen-result" class="screen">
+    <div class="result-card">
+      <div class="result-emoji" id="result-emoji">🏆</div>
+      <div class="result-title" id="result-title">Świetna robota!</div>
+      <div class="stars" id="result-stars">⭐⭐⭐</div>
+      <div class="result-score" id="result-score">Zdobyłeś 8 / 10 punktów</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" id="btn-play-again">Zagraj ponownie</button>
+      <button class="btn-secondary" onclick="showHome()">Menu główne</button>
+    </div>
+  </div>
+
+  <!-- FACTS -->
+  <div id="screen-facts" class="screen">
+    <h1 class="logo">📚 Kontynenty świata</h1>
+    <p class="subtitle">Kliknij na kontynent, żeby dowiedzieć się więcej!</p>
+    <div class="facts-grid" id="facts-grid"></div>
+    <div class="fact-expanded" id="fact-expanded"></div>
+    <div class="btn-row" style="margin-top:0.5rem">
+      <button class="btn-secondary" onclick="showHome()">← Menu główne</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const continents = [
+  {
+    id: 'europe',
+    name: 'Europa',
+    flag: '🏰',
+    color: '#5DCAA5',
+    area: '10,5 mln km²',
+    countries: 44,
+    population: '748 mln',
+    facts: [
+      'Jeden z mniejszych kontynentów na świecie',
+      'Ojczyzna Unii Europejskiej (27 krajów)',
+      'Wołga — najdłuższa rzeka Europy',
+      'Mont Blanc — najwyższy szczyt Europy Zachodniej',
+      'Tu leży Polska 🇵🇱',
+    ],
+    animals: ['Niedźwiedź brunatny', 'Ryś euroazjatycki', 'Łoś'],
+    wonder: 'Wieża Eiffla, Koloseum, Big Ben, Zamek Wawel',
+  },
+  {
+    id: 'asia',
+    name: 'Azja',
+    flag: '🏯',
+    color: '#F0997B',
+    area: '44,6 mln km²',
+    countries: 48,
+    population: '4,7 mld',
+    facts: [
+      'Największy kontynent na świecie!',
+      'Mount Everest — najwyższy szczyt Ziemi (8 849 m)',
+      'Ponad 60% całej ludności Ziemi tu mieszka',
+      'Jangcy — najdłuższa rzeka Azji',
+      'Tu wynaleziono papier, druk i kompas',
+    ],
+    animals: ['Tygrys bengalski', 'Panda wielka', 'Komodo'],
+    wonder: 'Wielki Mur Chiński, Tadż Mahal, Angkor Wat',
+  },
+  {
+    id: 'africa',
+    name: 'Afryka',
+    flag: '🦁',
+    color: '#FAC775',
+    area: '30,3 mln km²',
+    countries: 54,
+    population: '1,4 mld',
+    facts: [
+      'Drugi największy kontynent na Ziemi',
+      'Sahara — największa gorąca pustynia świata',
+      'Nil — jedna z najdłuższych rzek świata',
+      'Kolebka ludzkości (najstarsze szczątki człowieka)',
+      'Najwięcej krajów ze wszystkich kontynentów',
+    ],
+    animals: ['Lew', 'Słoń afrykański', 'Żyrafa', 'Goryl'],
+    wonder: 'Piramidy w Gizie, Wodospad Wiktorii, Kilimandżaro',
+  },
+  {
+    id: 'north-america',
+    name: 'Ameryka\nPółnocna',
+    nameShort: 'Ameryka Północna',
+    flag: '🗽',
+    color: '#85B7EB',
+    area: '24,7 mln km²',
+    countries: 23,
+    population: '590 mln',
+    facts: [
+      'Trzeci największy kontynent',
+      'Wielkie Jeziora — największe skupisko słodkiej wody',
+      'Grand Canyon — jeden z cudów przyrody',
+      'Tu leżą USA, Kanada i Meksyk',
+      'Missisipi-Missouri — długi system rzeczny',
+    ],
+    animals: ['Bizon', 'Kondor kalifornijski', 'Szop pracz', 'Kojot'],
+    wonder: 'Grand Canyon, Wodospad Niagara, Statua Wolności',
+  },
+  {
+    id: 'south-america',
+    name: 'Ameryka\nPołudniowa',
+    nameShort: 'Ameryka Południowa',
+    flag: '🌿',
+    color: '#97C459',
+    area: '17,8 mln km²',
+    countries: 12,
+    population: '434 mln',
+    facts: [
+      'Amazonka — jedna z najdłuższych rzek świata',
+      'Amazonia — największy las deszczowy na Ziemi',
+      'Andy — najdłuższy łańcuch górski na lądzie',
+      'Brazylia — największy kraj tego kontynentu',
+      'Jezioro Titicaca — najwyżej położone duże jezioro',
+    ],
+    animals: ['Jaguar', 'Ara', 'Kaiman', 'Tapir'],
+    wonder: 'Machu Picchu, Wodospady Iguazú, Posąg Chrystusa',
+  },
+  {
+    id: 'australia',
+    name: 'Australia',
+    flag: '🦘',
+    color: '#ED93B1',
+    area: '7,7 mln km²',
+    countries: 1,
+    population: '26 mln',
+    facts: [
+      'Najmniejszy kontynent i największa wyspa',
+      'Kangur i koala — tylko tu na wolności!',
+      'Wielka Rafa Koralowa — największa rafa na Ziemi',
+      'Ayers Rock (Uluru) — święta skała Aborygenów',
+      'Canberra — stolica (nie Sydney!)',
+    ],
+    animals: ['Kangur', 'Koala', 'Dziobak', 'Tasmański diabeł'],
+    wonder: 'Wielka Rafa Koralowa, Uluru, Opera w Sydney',
+  },
+  {
+    id: 'antarctica',
+    name: 'Antarktyda',
+    flag: '🧊',
+    color: '#B4B2A9',
+    area: '14 mln km²',
+    countries: 0,
+    population: '~1 000 badaczy',
+    facts: [
+      'Najzimniejszy kontynent (do -89°C!)',
+      'Pokryty lodem o grubości nawet 4 km',
+      'Nie ma stałych mieszkańców — tylko naukowcy',
+      'Tu leży Biegun Południowy',
+      'Największy rezerwuar słodkiej wody na Ziemi',
+    ],
+    animals: ['Pingwin cesarski', 'Foka lamparta', 'Petrel śnieżny'],
+    wonder: 'Biegun Południowy, Góra Erebus, Lodowce',
+  },
+];
+
+const quizQuestions = [
+  { emoji:'🐼', text:'Na którym kontynencie mieszka panda wielka?', answer:'asia', hint:'Największy kontynent' },
+  { emoji:'🦒', text:'Żyrafy żyją naturalnie na którym kontynencie?', answer:'africa', hint:'Drugi największy kontynent' },
+  { emoji:'🗼', text:'Wieża Eiffla stoi na którym kontynencie?', answer:'europe', hint:'Tu leży też Polska' },
+  { emoji:'🌋', text:'Na którym kontynencie leży Mount Everest?', answer:'asia', hint:'Ponad 60% ludności Ziemi tu mieszka' },
+  { emoji:'🦘', text:'Kangury żyją dziko tylko na którym kontynencie?', answer:'australia', hint:'Najmniejszy kontynent' },
+  { emoji:'🏔️', text:'Góry Andy leżą na którym kontynencie?', answer:'south-america', hint:'Tu płynie rzeka Amazonka' },
+  { emoji:'🧊', text:'Na którym kontynencie mieszkają pingwiny?', answer:'antarctica', hint:'Pokryty lodem, zimno!' },
+  { emoji:'🗽', text:'Statua Wolności stoi na którym kontynencie?', answer:'north-america', hint:'Tu leżą USA i Kanada' },
+  { emoji:'🐘', text:'Słonie afrykańskie żyją na którym kontynencie?', answer:'africa', hint:'Tu leży pustynia Sahara' },
+  { emoji:'🏰', text:'Koloseum (Rzym) leży na którym kontynencie?', answer:'europe', hint:'Liczba krajów: 44' },
+  { emoji:'🌊', text:'Wielka Rafa Koralowa leży koło którego kontynentu?', answer:'australia', hint:'Tylko 1 kraj na tym kontynencie' },
+  { emoji:'🌿', text:'Las Amazoński jest na którym kontynencie?', answer:'south-america', hint:'Tu leży Brazylia' },
+  { emoji:'🐅', text:'Tygrysy żyją dziko na którym kontynencie?', answer:'asia', hint:'Tadż Mahal też tu jest' },
+  { emoji:'❄️', text:'Który kontynent jest najzimniejszy na Ziemi?', answer:'antarctica', hint:'Brak stałych mieszkańców' },
+  { emoji:'🚂', text:'Na którym kontynencie leży Polska?', answer:'europe', hint:'Ojczyzna Unii Europejskiej' },
+  { emoji:'🦁', text:'Lwy żyją dziko na którym kontynencie?', answer:'africa', hint:'Nil tu płynie' },
+  { emoji:'🍁', text:'Kanada leży na którym kontynencie?', answer:'north-america', hint:'Wielkie Jeziora też tu są' },
+  { emoji:'🎭', text:'Na którym kontynencie leży Brazylia?', answer:'south-america', hint:'Andy to tamtejsze góry' },
+];
+
+const flagQuestions = [
+  { emoji:'🇧🇷', text:'Brazylia leży na którym kontynencie?', answer:'south-america' },
+  { emoji:'🇨🇳', text:'Chiny leżą na którym kontynencie?', answer:'asia' },
+  { emoji:'🇳🇬', text:'Nigeria leży na którym kontynencie?', answer:'africa' },
+  { emoji:'🇩🇪', text:'Niemcy leżą na którym kontynencie?', answer:'europe' },
+  { emoji:'🇺🇸', text:'USA leżą na którym kontynencie?', answer:'north-america' },
+  { emoji:'🇦🇺', text:'Australia leży na którym kontynencie?', answer:'australia' },
+  { emoji:'🇮🇳', text:'Indie leżą na którym kontynencie?', answer:'asia' },
+  { emoji:'🇲🇽', text:'Meksyk leży na którym kontynencie?', answer:'north-america' },
+  { emoji:'🇵🇱', text:'Polska leży na którym kontynencie?', answer:'europe' },
+  { emoji:'🇿🇦', text:'Rep. Południowej Afryki leży na którym kontynencie?', answer:'africa' },
+  { emoji:'🇦🇷', text:'Argentyna leży na którym kontynencie?', answer:'south-america' },
+  { emoji:'🇯🇵', text:'Japonia leży na którym kontynencie?', answer:'asia' },
+  { emoji:'🇫🇷', text:'Francja leży na którym kontynencie?', answer:'europe' },
+  { emoji:'🇨🇦', text:'Kanada leży na którym kontynencie?', answer:'north-america' },
+  { emoji:'🇪🇬', text:'Egipt leży na którym kontynencie?', answer:'africa' },
+];
+
+// Map SVG paths (simplified but recognizable shapes)
+const svgPaths = {
+  'europe':        'M305,58 L342,52 L365,62 L372,74 L368,86 L352,92 L358,102 L347,112 L328,114 L316,107 L311,96 L303,86 Z',
+  'asia':          'M368,50 L432,46 L475,58 L494,78 L486,106 L470,118 L450,124 L428,120 L408,128 L386,132 L370,122 L366,108 L360,92 L358,74 L362,60 Z',
+  'africa':        'M316,118 L348,114 L374,122 L378,138 L373,162 L362,188 L346,204 L324,208 L303,198 L292,178 L291,154 L301,132 Z',
+  'north-america': 'M157,56 L222,52 L254,68 L258,92 L247,118 L225,133 L198,138 L172,128 L153,106 L146,82 Z',
+  'south-america': 'M192,148 L226,140 L242,157 L244,182 L237,212 L219,233 L197,238 L177,228 L169,202 L172,177 L183,160 Z',
+  'australia':     'M428,158 L477,152 L498,168 L498,194 L482,210 L455,214 L430,202 L418,185 L420,168 Z',
+  'antarctica':    'M160,238 L240,230 L320,227 L400,229 L462,237 L474,250 L462,262 L380,268 L300,272 L218,268 L152,256 Z',
+};
+
+const continentColors = {
+  'europe':'#5DCAA5','asia':'#F0997B','africa':'#FAC775',
+  'north-america':'#85B7EB','south-america':'#97C459',
+  'australia':'#ED93B1','antarctica':'#B4B2A9'
+};
+
+let currentMode = 'names';
+let currentQuestions = [];
+let qIndex = 0;
+let score = 0;
+let answered = false;
+let mapOrder = [];
+let mapQIndex = 0;
+let mapScore = 0;
+let mapAnswered = false;
+let openFact = null;
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function showHome() { showScreen('screen-home'); }
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function getName(c) { return c.nameShort || c.name.replace('\n',' '); }
+
+/* ── QUIZ ── */
+function startQuiz(mode) {
+  if (mode === 'map') { startMapQuiz(); return; }
+  currentMode = mode;
+  score = 0; qIndex = 0; answered = false;
+  const pool = mode === 'flags' ? flagQuestions : quizQuestions;
+  currentQuestions = shuffle(pool).slice(0, 10);
+  showScreen('screen-quiz');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = currentQuestions[qIndex];
+  const total = currentQuestions.length;
+  document.getElementById('q-num').textContent = `${qIndex+1}/${total}`;
+  document.getElementById('progress-fill').style.width = `${(qIndex/total)*100}%`;
+  document.getElementById('score-display').textContent = score;
+  document.getElementById('q-emoji').textContent = q.emoji;
+  document.getElementById('q-text').textContent = q.text;
+  document.getElementById('q-hint').textContent = '';
+  document.getElementById('feedback-box').textContent = '';
+  answered = false;
+
+  const correct = continents.find(c => c.id === q.answer);
+  const wrong = shuffle(continents.filter(c => c.id !== q.answer)).slice(0,3);
+  const choices = shuffle([correct, ...wrong]);
+
+  const grid = document.getElementById('answers-grid');
+  grid.innerHTML = '';
+  choices.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn';
+    btn.textContent = `${c.flag} ${getName(c)}`;
+    btn.onclick = () => handleAnswer(c.id, q.answer, btn, q);
+    grid.appendChild(btn);
+  });
+}
+
+function handleAnswer(chosen, correct, btn, q) {
+  if (answered) return;
+  answered = true;
+  document.querySelectorAll('.answer-btn').forEach(b => {
+    b.disabled = true;
+    const label = b.textContent.trim();
+    const cId = continents.find(c => `${c.flag} ${getName(c)}` === label)?.id;
+    if (cId === correct) b.classList.add('correct');
+    else if (b === btn && chosen !== correct) b.classList.add('wrong');
+  });
+  const fb = document.getElementById('feedback-box');
+  if (chosen === correct) {
+    score++;
+    document.getElementById('score-display').textContent = score;
+    fb.textContent = '✅ Brawo! Dobrze!';
+  } else {
+    const c = continents.find(x => x.id === correct);
+    fb.textContent = `❌ Niestety... To była ${getName(c)}`;
+    if (q.hint) document.getElementById('q-hint').textContent = `💡 ${q.hint}`;
+  }
+  setTimeout(() => {
+    qIndex++;
+    if (qIndex >= currentQuestions.length) showResult(currentQuestions.length);
+    else renderQuestion();
+  }, 1700);
+}
+
+/* ── MAP ── */
+function buildMapSVG(highlightId) {
+  let paths = '';
+  Object.entries(svgPaths).forEach(([id, d]) => {
+    const fill = continentColors[id];
+    const isHL = id === highlightId;
+    const opacity = (highlightId && !isHL) ? '0.3' : '1';
+    const stroke = isHL ? '#1D9E75' : '#fff';
+    const sw = isHL ? '3' : '1';
+    paths += `<path class="continent-path" d="${d}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" opacity="${opacity}" onclick="handleMapClick('${id}')"/>`;
+  });
+  return `<svg viewBox="0 0 640 285" xmlns="http://www.w3.org/2000/svg" style="width:100%">
+    <rect width="640" height="285" rx="8" fill="#DDF0FF" opacity="0.5"/>
+    ${paths}
+  </svg>`;
+}
+
+function startMapQuiz() {
+  mapOrder = shuffle([...continents]);
+  mapQIndex = 0; mapScore = 0; mapAnswered = false;
+  showScreen('screen-map');
+  renderMapQ();
+}
+
+function renderMapQ() {
+  const total = mapOrder.length;
+  document.getElementById('map-q-num').textContent = `${mapQIndex+1}/${total}`;
+  document.getElementById('map-progress-fill').style.width = `${(mapQIndex/total)*100}%`;
+  document.getElementById('map-score-display').textContent = mapScore;
+  document.getElementById('map-feedback-box').textContent = '';
+  mapAnswered = false;
+  const target = mapOrder[mapQIndex];
+  document.getElementById('map-question-text').textContent = `${target.flag} Wskaż na mapie: ${getName(target)}`;
+  document.getElementById('map-svg-wrap').innerHTML = buildMapSVG(null);
+}
+
+function handleMapClick(id) {
+  if (mapAnswered) return;
+  mapAnswered = true;
+  const target = mapOrder[mapQIndex];
+  const fb = document.getElementById('map-feedback-box');
+  if (id === target.id) {
+    mapScore++;
+    document.getElementById('map-score-display').textContent = mapScore;
+    fb.textContent = `✅ Tak! To ${getName(target)}!`;
+  } else {
+    const wrong = continents.find(c => c.id === id);
+    fb.textContent = `❌ To ${getName(wrong)}. Szukałeś: ${getName(target)}`;
+  }
+  document.getElementById('map-svg-wrap').innerHTML = buildMapSVG(target.id);
+  setTimeout(() => {
+    mapQIndex++;
+    if (mapQIndex >= mapOrder.length) {
+      score = mapScore;
+      showResult(mapOrder.length);
+    } else renderMapQ();
+  }, 1900);
+}
+
+/* ── RESULT ── */
+function showResult(total) {
+  const pct = score / total;
+  let emoji, title, stars;
+  if (pct === 1)      { emoji='🏆'; title='Mistrz geografii!';    stars='⭐⭐⭐'; }
+  else if (pct >= 0.7){ emoji='😄'; title='Świetny odkrywca!';    stars='⭐⭐'; }
+  else if (pct >= 0.4){ emoji='🙂'; title='Dobra próba!';          stars='⭐'; }
+  else                { emoji='📖'; title='Czas na naukę!';        stars='💫'; }
+  document.getElementById('result-emoji').textContent  = emoji;
+  document.getElementById('result-title').textContent  = title;
+  document.getElementById('result-stars').textContent  = stars;
+  document.getElementById('result-score').textContent  = `Zdobyłeś ${score} / ${total} punktów`;
+  document.getElementById('btn-play-again').onclick    = () => startQuiz(currentMode);
+  showScreen('screen-result');
+}
+
+/* ── FACTS ── */
+function showFacts() {
+  showScreen('screen-facts');
+  openFact = null;
+  document.getElementById('fact-expanded').classList.remove('open');
+  const grid = document.getElementById('facts-grid');
+  grid.innerHTML = '';
+  continents.forEach(c => {
+    const card = document.createElement('div');
+    card.className = 'fact-card';
+    card.innerHTML = `<div class="fact-flag">${c.flag}</div><div class="fact-name">${getName(c)}</div><div class="fact-detail">${c.population}</div>`;
+    card.onclick = () => toggleFact(c);
+    grid.appendChild(card);
+  });
+}
+
+function toggleFact(c) {
+  const box = document.getElementById('fact-expanded');
+  if (openFact === c.id) {
+    box.classList.remove('open');
+    openFact = null;
+    return;
+  }
+  openFact = c.id;
+  box.innerHTML = `
+    <h3>${c.flag} ${getName(c)}</h3>
+    <div class="fact-row">
+      <span class="fact-pill">📐 ${c.area}</span>
+      <span class="fact-pill">🏳️ ${c.countries} ${c.countries === 1 ? 'kraj' : 'krajów'}</span>
+      <span class="fact-pill">👥 ${c.population}</span>
+    </div>
+    <div class="fact-section-label">🌟 Ciekawostki:</div>
+    ${c.facts.map(f=>`<div class="fact-item">• ${f}</div>`).join('')}
+    <div class="fact-section-label">🐾 Zwierzęta:</div>
+    <div class="fact-row">${c.animals.map(a=>`<span class="fact-pill">${a}</span>`).join('')}</div>
+    <div class="fact-section-label">🏛️ Znane miejsca:</div>
+    <div class="fact-item">${c.wonder}</div>
+  `;
+  box.classList.add('open');
+  setTimeout(() => box.scrollIntoView({ behavior:'smooth', block:'nearest' }), 50);
+}
+</script>
+</body>
+</html>
